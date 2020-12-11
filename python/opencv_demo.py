@@ -3,6 +3,8 @@ from enum import Enum
 import time
 import cv2
 from cv2.xfeatures2d import matchGMS
+from compare import find_ground_truth
+
 
 
 class DrawingType(Enum):
@@ -60,8 +62,8 @@ def draw_matches(src1, src2, kp1, kp2, matches, drawing_type):
 
 
 if __name__ == '__main__':
-    img1 = cv2.imread("../data/01.jpg")
-    img2 = cv2.imread("../data/02.jpg")
+    img1 = cv2.imread("GT_pics/wall/imgs/img1.ppm")   #("../data/01.jpg")
+    img2 = cv2.imread("GT_pics/wall/imgs/img6.ppm")   #("../data/02.jpg")
 
     orb = cv2.ORB_create(10000)
     orb.setFastThreshold(0)
@@ -71,14 +73,30 @@ if __name__ == '__main__':
     matcher = cv2.BFMatcher(cv2.NORM_HAMMING)
     matches_all = matcher.match(des1, des2)
 
+
+
+
     start = time.time()
     matches_gms = matchGMS(img1.shape[:2], img2.shape[:2], kp1, kp2, matches_all, withScale=False, withRotation=False, thresholdFactor=6)
     end = time.time()
+
+    kin1 = []
+    kin2 = []
+    for match in matches_gms:
+        i1 = match.queryIdx
+        i2 = match.trainIdx
+        kin1.append(kp1[i1].pt)
+        kin2.append(kp2[i2].pt)
+    kin1 = np.array(kin1)
+    kin2 = np.array(kin2)
+    true_pos, false_pos = find_ground_truth(kin1, kin2, "ground_truth/wall/wall_1_6_TP.txt")
 
     print('Found', len(matches_gms), 'matches')
     print('GMS takes', end-start, 'seconds')
 
     output = draw_matches(img1, img2, kp1, kp2, matches_gms, DrawingType.ONLY_LINES)
+
+
 
     cv2.imshow("show", output)
     cv2.waitKey(0)

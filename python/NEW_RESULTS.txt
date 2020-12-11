@@ -1,0 +1,5 @@
+ground_truth/bark/bark_1_2_TP.txt
+1388 true positive out of 1727
+339 false positive out of 1727
+
+ 
